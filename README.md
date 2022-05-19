@@ -1,5 +1,5 @@
 <div align="center">
-<img height="250" src="res/logo.svg" alt="Errors Logo" style="margin-bottom: 1rem" />
+<img height="250" src="res/logo.svg?size=new" alt="Errors Logo" style="margin-bottom: 1rem" />
 </div>
 
 [![made-with-Go](https://img.shields.io/badge/Made%20with-Go-1f425f.svg)](http://golang.org)
