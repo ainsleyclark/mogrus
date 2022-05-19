@@ -17,7 +17,7 @@ type MongoOptions struct {
 	UseAll     bool
 	Forget     bool
 	Expiry     time.Duration
-	// TODO Expiry
+	// TODO Expiry for each level, with how many seconds
 }
 
 // NewWithMongoClient creates a new standard logger and sets logging levels
