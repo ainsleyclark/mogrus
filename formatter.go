@@ -17,15 +17,10 @@ import (
 
 // Formatter implements logrus.Formatter interface.
 type Formatter struct {
-	Colours         bool
-	TimestampFormat string
-	entry           *logrus.Entry
-	buf             *bytes.Buffer
+	Options
+	entry *logrus.Entry
+	buf   *bytes.Buffer
 }
-
-// Prefix is the string written to the log before any
-// message.
-const Prefix = "[KRANG]"
 
 // Format building log message.
 func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
@@ -36,7 +31,7 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	f.buf = b
 	f.entry = entry
 
-	b.WriteString(Prefix + " ")
+	b.WriteString(f.Prefix + " ")
 
 	f.Time()
 	f.StatusCode()
@@ -69,8 +64,8 @@ func (f *Formatter) Time() {
 }
 
 // StatusCode Prints the status code of the request, if
-// there is none set the log is config and "KRA" will
-// be printed.
+// there is none set the log is config and the default
+// level will be printed.
 func (f *Formatter) StatusCode() {
 	f.buf.WriteString(" | ")
 
@@ -79,7 +74,7 @@ func (f *Formatter) StatusCode() {
 	status, ok := f.entry.Data["status_code"]
 	if !ok {
 		cc = color.Style{color.FgLightWhite, color.BgBlack, color.OpBold}
-		f.buf.WriteString(cc.Sprint("KRA"))
+		f.buf.WriteString(cc.Sprint(f.DefaultStatus))
 	}
 
 	if codeInt, ok := status.(int); ok {

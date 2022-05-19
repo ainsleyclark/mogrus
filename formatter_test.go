@@ -12,8 +12,12 @@ import (
 )
 
 func (t *LoggerTestSuite) TestFormatter() {
-	now := time.Now()
-	nowStr := now.Format(time.StampMilli)
+	var (
+		now           = time.Now()
+		nowStr        = now.Format(time.StampMilli)
+		defaultStatus = "MOG"
+		prefix        = "[MOGRUS]"
+	)
 
 	tt := map[string]struct {
 		entry *logrus.Entry
@@ -24,42 +28,42 @@ func (t *LoggerTestSuite) TestFormatter() {
 				Level:   logrus.DebugLevel,
 				Message: "message",
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [DEBUG] | [msg] message\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [DEBUG] | [msg] message\n", nowStr, defaultStatus),
 		},
 		"Info": {
 			&logrus.Entry{
 				Level:   logrus.InfoLevel,
 				Message: "message",
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [INFO]  | [msg] message\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [INFO]  | [msg] message\n", nowStr, defaultStatus),
 		},
 		"Warning": {
 			&logrus.Entry{
 				Level:   logrus.WarnLevel,
 				Message: "message",
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [WARNING] | [msg] message\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [WARNING] | [msg] message\n", nowStr, defaultStatus),
 		},
 		"Error": {
 			&logrus.Entry{
 				Level:   logrus.ErrorLevel,
 				Message: "message",
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [ERROR] | [msg] message\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [ERROR] | [msg] message\n", nowStr, defaultStatus),
 		},
 		"Fatal": {
 			&logrus.Entry{
 				Level:   logrus.FatalLevel,
 				Message: "message",
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [FATAL] | [msg] message\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [FATAL] | [msg] message\n", nowStr, defaultStatus),
 		},
 		"Panic": {
 			&logrus.Entry{
 				Level:   logrus.PanicLevel,
 				Message: "message",
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [PANIC] | [msg] message\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [PANIC] | [msg] message\n", nowStr, defaultStatus),
 		},
 		"Fields": {
 			&logrus.Entry{
@@ -68,7 +72,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.InfoLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [INFO]  | key1: test1\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [INFO]  | key1: test1\n", nowStr, defaultStatus),
 		},
 		"Print Error Pointer": {
 			&logrus.Entry{
@@ -77,7 +81,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.ErrorLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [ERROR] | [code] INTERNAL [msg] message [op] operation [error] error\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [ERROR] | [code] INTERNAL [msg] message [op] operation [error] error\n", nowStr, defaultStatus),
 		},
 		"Print Error Non Pointer": {
 			&logrus.Entry{
@@ -86,7 +90,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.ErrorLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [ERROR] | [code] INTERNAL [msg] message [op] operation [error] error\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [ERROR] | [code] INTERNAL [msg] message [op] operation [error] error\n", nowStr, defaultStatus),
 		},
 		"Nil To Error": {
 			&logrus.Entry{
@@ -95,7 +99,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.ErrorLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [ERROR]\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [ERROR]\n", nowStr, defaultStatus),
 		},
 		"Print Error": {
 			&logrus.Entry{
@@ -104,7 +108,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.ErrorLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [ERROR] | [error] error\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [ERROR] | [error] error\n", nowStr, defaultStatus),
 		},
 		"Print Error String": {
 			&logrus.Entry{
@@ -113,7 +117,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.ErrorLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [ERROR] | [error] error\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [ERROR] | [error] error\n", nowStr, defaultStatus),
 		},
 		"Server Success": {
 			&logrus.Entry{
@@ -126,7 +130,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.InfoLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | 200 | [INFO]  | 127.0.0.1 |   GET    \"/page\"\n", nowStr),
+			fmt.Sprintf(prefix+" %s | 200 | [INFO]  | 127.0.0.1 |   GET    \"/page\"\n", nowStr),
 		},
 		"Server Not Found": {
 			&logrus.Entry{
@@ -139,7 +143,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.InfoLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | 404 | [INFO]  | 127.0.0.1 |   GET    \"/page\"\n", nowStr),
+			fmt.Sprintf(prefix+" %s | 404 | [INFO]  | 127.0.0.1 |   GET    \"/page\"\n", nowStr),
 		},
 		"Message": {
 			&logrus.Entry{
@@ -148,7 +152,7 @@ func (t *LoggerTestSuite) TestFormatter() {
 				},
 				Level: logrus.InfoLevel,
 			},
-			fmt.Sprintf(Prefix+" %s | KRA | [INFO]  | [msg] message\n", nowStr),
+			fmt.Sprintf(prefix+" %s | %s | [INFO]  | [msg] message\n", nowStr, defaultStatus),
 		},
 	}
 
@@ -156,7 +160,11 @@ func (t *LoggerTestSuite) TestFormatter() {
 		t.Run(name, func() {
 			test.entry.Time = now
 			f := Formatter{
-				Colours: false,
+				Options: Options{
+					Colours:       false,
+					Prefix:        prefix,
+					DefaultStatus: defaultStatus,
+				},
 			}
 			got, err := f.Format(test.entry)
 			t.NoError(err)

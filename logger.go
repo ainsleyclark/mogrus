@@ -12,6 +12,29 @@ import (
 	"os"
 )
 
+type (
+	Options struct {
+		Colours         bool
+		TimestampFormat string
+		// Prefix is the string written to the log before any
+		// message.
+		Prefix        string
+		DefaultStatus string
+	}
+)
+
+func (o *Options) setDefaults() {
+	if o.TimestampFormat == "" {
+		o.TimestampFormat = "2006-01-02 15:04:05"
+	}
+	if o.Prefix == "" {
+		o.Prefix = "[MOGRUS]"
+	}
+	if o.DefaultStatus == "" {
+		o.DefaultStatus = "MOG"
+	}
+}
+
 var (
 	// logger is an alias for the standard Logrus logger.
 	logger = logrus.New()
@@ -19,8 +42,9 @@ var (
 
 // New creates a new standard logger and sets logging levels
 // dependent on environment variables.
-func New(prefix string) {
-	initialise()
+func New(opts Options) {
+	opts.setDefaults()
+	initialise(opts)
 	addHooks(nil, nil)
 }
 
@@ -96,12 +120,11 @@ func SetLogger(l *logrus.Logger) {
 
 // initialise sets the standard log level, sets the
 // log formatter and discards the stdout.
-func initialise() {
+func initialise(opts Options) {
 	logger.SetLevel(logrus.TraceLevel)
 
 	logger.SetFormatter(&Formatter{
-		TimestampFormat: "2006-01-02 15:04:05",
-		Colours:         true,
+		Options: opts,
 	})
 
 	// Send all logs to nowhere by default.

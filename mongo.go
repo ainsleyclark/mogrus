@@ -13,26 +13,26 @@ import (
 )
 
 type MongoOptions struct {
-	UseAll bool
-	Forget bool
-	Expiry time.Duration
+	Collection *mongo.Collection
+	UseAll     bool
+	Forget     bool
+	Expiry     time.Duration
+	// TODO Expiry
 }
 
 // NewWithMongoClient creates a new standard logger and sets logging levels
 // dependent on environment variables. Upon a log fire, logs will be sent
 // to the mongo database that is passed.
-//
-// Info messages will be sent to the CollectionStdOut collection.
-// Errors will be sent to the CollectionStdErr collection.
-func NewWithMongoClient(ctx context.Context, collection *mongo.Collection, config MongoOptions) error {
-	initialise()
+func NewWithMongoClient(ctx context.Context, opts Options, config MongoOptions) error {
+	opts.setDefaults()
+	initialise(opts)
 
 	if config.Forget {
-		addIndexes(ctx, collection)
-		addHooks(collection, &config)
+		addIndexes(ctx, config.Collection)
+		addHooks(config.Collection, &config)
 	}
 
-	addHooks(collection, &config)
+	addHooks(config.Collection, &config)
 
 	return nil
 }

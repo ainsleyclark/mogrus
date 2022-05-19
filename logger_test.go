@@ -12,7 +12,8 @@ import (
 )
 
 func (t *LoggerTestSuite) TestInit() {
-	New()
+	opts := Options{}
+	New(opts)
 	t.Equal(logrus.TraceLevel, logger.Level)
 	logger = logrus.New()
 }

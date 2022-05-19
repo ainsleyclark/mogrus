@@ -25,7 +25,7 @@ func TestLogger(t *testing.T) {
 
 // TearDownTestSuite - Teardown logging after testing.
 func (t *LoggerTestSuite) TearDownTestSuite() {
-	New()
+	New(Options{})
 }
 
 // Setup is a helper function for setting up the logger
@@ -35,7 +35,7 @@ func (t *LoggerTestSuite) Setup() *bytes.Buffer {
 	logger.SetLevel(logrus.TraceLevel)
 	logger.SetOutput(buf)
 	logger.SetFormatter(&Formatter{
-		Colours: false,
+		Options: Options{Colours: false},
 	})
 	return buf
 }
