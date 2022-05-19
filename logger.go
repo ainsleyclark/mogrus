@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package logger
+package mogrus
 
 import (
 	"github.com/sirupsen/logrus"
@@ -13,13 +13,13 @@ import (
 )
 
 var (
-	// logger is an alias for the standard logger.
+	// logger is an alias for the standard Logrus logger.
 	logger = logrus.New()
 )
 
 // New creates a new standard logger and sets logging levels
 // dependent on environment variables.
-func New() {
+func New(prefix string) {
 	initialise()
 	addHooks(nil, nil)
 }

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package logger
+package mogrus
 
 import (
 	"context"
@@ -78,9 +78,9 @@ func (hook *WriterHook) FireMongo(entry *logrus.Entry) error {
 			data["message"] = err.Message
 			data["operation"] = err.Operation
 			data["error"] = err.Err.Error()
-		} else {
-			data[k] = v
+			continue
 		}
+		data[k] = v
 	}
 
 	data["expiry"] = map[string]time.Time{}
