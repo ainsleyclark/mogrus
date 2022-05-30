@@ -21,7 +21,6 @@ type (
 	hooker struct {
 		Options
 	}
-
 	// ExpirationLevels defines the map of log levels mapped to
 	// a duration a LevelIndex.
 	ExpirationLevels map[logrus.Level]LevelIndex
