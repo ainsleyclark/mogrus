@@ -18,20 +18,20 @@ type (
 	// hooker is a hook that writes logs of specified
 	// LogLevels to specified Writer.
 	hooker struct {
-		// The collection to send logs too.
-		Collection *mongo.Collection
-		// MongoOptions - TODO
-		MongoOptions MongoOptions
+		Options Options
 	}
-	// MongoOptions - TODO
-	MongoOptions struct {
+	// Options defines the configuration used for creating a
+	// new Mogrus hook.
+	Options struct {
 		Collection *mongo.Collection
 		UseAll     bool
 		Forget     bool
 		Expiry     time.Duration
+		FireHook   FireHook
 		// TODO Expiry for each level, with how many seconds
 	}
-	// Entry - TODD
+	// Entry defines a singular entry sent to Mongo
+	// when a Logrus event is fired.
 	Entry struct {
 		Level   string         `json:"level" bson:"level"`
 		Time    time.Time      `json:"time" bson:"time"`
@@ -40,30 +40,39 @@ type (
 		Error   *errors.Error  `json:"error" bson:"error"`
 		Expiry  time.Time      `json:"expiry" bson:"expiry"`
 	}
+	// FireHook is a hook function called just before a
+	// entry is logged to Mongo.
+	FireHook func(e Entry)
 )
+
+// Validate validates the options before creating a new Hook.
+func (m Options) Validate() error {
+	if m.Collection == nil {
+		return errors.New("mongo collection nil")
+	}
+	return nil
+}
 
 // New creates a new Mogrus hooker.
 // Returns errors.INVALID if the collection is nil.
 // Returns errors.INTERNAL if the indexes could not be added.
-func New(ctx context.Context, collection *mongo.Collection, opts MongoOptions) (*hooker, error) {
+func New(ctx context.Context, opts Options) (*hooker, error) {
 	const op = "Mogrus.New"
 
-	if collection == nil {
-		return nil, errors.NewInvalid(errors.New("mongo collection nil"), "Mongo collection cannot be nil", op)
+	err := opts.Validate()
+	if err != nil {
+		return nil, errors.NewInvalid(err, "Error validating Options", op)
 	}
 
-	err := addIndexes(ctx, collection)
+	err = addIndexes(ctx, opts.Collection)
 	if err != nil {
 		return nil, errors.NewInternal(err, "Error creating indexes", op)
 	}
 
 	return &hooker{
-		Collection:   collection,
-		MongoOptions: opts,
+		Options: opts,
 	}, nil
 }
-
-// TODO add firehook!
 
 // Fire sends the entry time, level and message and any
 // other entry fields to the database.
@@ -100,13 +109,16 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 	//	}
 	//}
 
-	_, err := hook.Collection.InsertOne(context.Background(), formatted)
+	if hook.Options.FireHook != nil {
+		hook.Options.FireHook(formatted)
+	}
+
+	_, err := hook.Options.Collection.InsertOne(context.Background(), formatted)
 	if err != nil {
 		return errors.NewInternal(err, "Error writing entry to Mongo Collection", op)
 	}
 
 	return nil
-
 }
 
 // Levels define on which log levels this hook would
