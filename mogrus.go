@@ -18,17 +18,44 @@ type (
 	// hooker is a hook that writes logs of specified
 	// LogLevels to specified Writer.
 	hooker struct {
-		Options Options
+		Options
 	}
 	// Options defines the configuration used for creating a
 	// new Mogrus hook.
 	Options struct {
+		// Collection is the Mongo collection to write to when
+		// a log is fired.
 		Collection *mongo.Collection
-		UseAll     bool
-		Forget     bool
-		Expiry     time.Duration
-		FireHook   FireHook
-		// TODO Expiry for each level, with how many seconds
+		// If there is no expiration set for a specific log level,
+		// the default expiry will be used.
+		Expiry time.Duration
+		// FireHook is a hook function called just before an
+		// entry is logged to Mongo.
+		FireHook FireHook
+		// ExpirationLevels allows for the customisation of expiry
+		// time for each logrus level.
+		// There may be instances where you want to keep Panics in
+		// the Mongo collection for longer than trace levels.
+		// For example:
+		/*
+			var levels = ExpirationLevels{
+				// Expire trace levels after 10 hours.
+				logrus.TraceLevel: LevelIndex{
+					Expire:   true,
+					Duration: time.Hour * 10,
+				},
+				// Expire info levels after 24 hours.
+				logrus.InfoLevel: LevelIndex{
+					Expire:   true,
+					Duration: time.Hour * 24,
+				},
+				// Do not expire panic entries, keep them forever.
+				logrus.PanicLevel: LevelIndex{
+					Expire: false,
+				},
+			}
+		*/
+		ExpirationLevels ExpirationLevels
 	}
 	// Entry defines a singular entry sent to Mongo
 	// when a Logrus event is fired.
@@ -40,15 +67,33 @@ type (
 		Error   *errors.Error  `json:"error" bson:"error"`
 		Expiry  time.Time      `json:"expiry" bson:"expiry"`
 	}
-	// FireHook is a hook function called just before a
-	// entry is logged to Mongo.
+	// ExpirationLevels defines the map of log levels mapped to
+	// a duration a LevelIndex.
+	ExpirationLevels map[logrus.Level]LevelIndex
+	// LevelIndex defines the options for expiring certain logrus
+	// Levels via Mongo.
+	LevelIndex struct {
+		Expire   bool
+		Duration time.Duration
+	}
+	// FireHook defines the function used for firing entry
+	// to a call back function.
 	FireHook func(e Entry)
 )
 
+const (
+	// DefaultExpiry is the expiry of items in Mongo when none
+	// is set. The default expiration is one week.
+	DefaultExpiry = time.Hour * 24 * 7
+)
+
 // Validate validates the options before creating a new Hook.
-func (m Options) Validate() error {
-	if m.Collection == nil {
+func (o Options) Validate() error {
+	if o.Collection == nil {
 		return errors.New("mongo collection nil")
+	}
+	if o.Expiry == 0 {
+		o.Expiry = DefaultExpiry
 	}
 	return nil
 }
@@ -109,11 +154,11 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 	//	}
 	//}
 
-	if hook.Options.FireHook != nil {
-		hook.Options.FireHook(formatted)
+	if hook.FireHook != nil {
+		hook.FireHook(formatted)
 	}
 
-	_, err := hook.Options.Collection.InsertOne(context.Background(), formatted)
+	_, err := hook.Collection.InsertOne(context.Background(), formatted)
 	if err != nil {
 		return errors.NewInternal(err, "Error writing entry to Mongo Collection", op)
 	}
@@ -128,6 +173,7 @@ func (hook *hooker) Levels() []logrus.Level {
 }
 
 func addIndexes(ctx context.Context, collection *mongo.Collection) error {
+
 	indexes := []mongo.IndexModel{
 		{
 			Keys:    bson.M{"expiry.ttl60s": 1},
