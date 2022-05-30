@@ -20,13 +20,10 @@ type MongoOptions struct {
 	// TODO Expiry for each level, with how many seconds
 }
 
-// NewWithMongoClient creates a new standard logger and sets logging levels
+// NewWithMongoClient creates a new standard L and sets logging levels
 // dependent on environment variables. Upon a log fire, logs will be sent
 // to the mongo database that is passed.
-func NewWithMongoClient(ctx context.Context, opts Options, config MongoOptions) error {
-	opts.setDefaults()
-	initialise(opts)
-
+func NewWithMongoClient(ctx context.Context, config MongoOptions) error {
 	if config.Forget {
 		addIndexes(ctx, config.Collection)
 		addHooks(config.Collection, &config)
@@ -51,6 +48,6 @@ func addIndexes(ctx context.Context, collection *mongo.Collection) {
 
 	_, err := collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
-		logger.Debug("Error creating index" + err.Error())
+		L.Debug("Error creating index" + err.Error())
 	}
 }

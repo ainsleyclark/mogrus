@@ -17,9 +17,24 @@ import (
 
 // Formatter implements logrus.Formatter interface.
 type Formatter struct {
-	Options
-	entry *logrus.Entry
-	buf   *bytes.Buffer
+	Colours         bool
+	TimestampFormat string
+	Prefix          string
+	DefaultStatus   string
+	entry           *logrus.Entry
+	buf             *bytes.Buffer
+}
+
+func (f *Formatter) setDefaults() {
+	if f.TimestampFormat == "" {
+		f.TimestampFormat = "2006-01-02 15:04:05"
+	}
+	if f.Prefix == "" {
+		f.Prefix = "[MOGRUS]"
+	}
+	if f.DefaultStatus == "" {
+		f.DefaultStatus = "MOG"
+	}
 }
 
 // Format building log message.

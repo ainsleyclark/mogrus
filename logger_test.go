@@ -14,8 +14,8 @@ import (
 func (t *LoggerTestSuite) TestInit() {
 	opts := Options{}
 	New(opts)
-	t.Equal(logrus.TraceLevel, logger.Level)
-	logger = logrus.New()
+	t.Equal(logrus.TraceLevel, L.Level)
+	L = logrus.New()
 }
 
 func (t *LoggerTestSuite) TestLogger() {
@@ -85,9 +85,9 @@ func (t *LoggerTestSuite) TestLogger() {
 func (t *LoggerTestSuite) TestLogger_Fatal() {
 	buf := t.Setup() // nolint
 	defer func() {
-		logger = logrus.New()
+		L = logrus.New()
 	}()
-	logger.ExitFunc = func(i int) {}
+	L.ExitFunc = func(i int) {}
 	Fatal("fatal")
 	t.Contains(buf.String(), "fatal")
 }
@@ -103,22 +103,22 @@ func (t *LoggerTestSuite) TestLogger_Panic() {
 func (t *LoggerTestSuite) TestLogger_SetOutput() {
 	buf := &bytes.Buffer{}
 	SetOutput(buf)
-	t.Equal(buf, logger.Out)
+	t.Equal(buf, L.Out)
 }
 
 func (t *LoggerTestSuite) TestSetLevel() {
 	defer func() {
-		logger = logrus.New()
+		L = logrus.New()
 	}()
 	SetLevel(logrus.WarnLevel)
-	t.Equal(logrus.WarnLevel, logger.GetLevel())
+	t.Equal(logrus.WarnLevel, L.GetLevel())
 }
 
 func (t *LoggerTestSuite) TestSetLogger() {
 	defer func() {
-		logger = logrus.New()
+		L = logrus.New()
 	}()
-	l := logger
+	l := L
 	SetLogger(l)
-	t.Equal(l, logger)
+	t.Equal(l, L)
 }

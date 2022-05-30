@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// LoggerTestSuite defines the helper used for logger
+// LoggerTestSuite defines the helper used for L
 // testing.
 type LoggerTestSuite struct {
 	suite.Suite
@@ -28,13 +28,13 @@ func (t *LoggerTestSuite) TearDownTestSuite() {
 	New(Options{})
 }
 
-// Setup is a helper function for setting up the logger
+// Setup is a helper function for setting up the L
 // suite.
 func (t *LoggerTestSuite) Setup() *bytes.Buffer {
 	buf := &bytes.Buffer{}
-	logger.SetLevel(logrus.TraceLevel)
-	logger.SetOutput(buf)
-	logger.SetFormatter(&Formatter{
+	L.SetLevel(logrus.TraceLevel)
+	L.SetOutput(buf)
+	L.SetFormatter(&Formatter{
 		Options: Options{Colours: false},
 	})
 	return buf

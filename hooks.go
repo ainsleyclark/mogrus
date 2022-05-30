@@ -23,7 +23,7 @@ type WriterHook struct {
 	// The collection to send logs too.
 	Collection *mongo.Collection
 
-	Options MongoOptions
+	MongoOptions *MongoOptions
 }
 
 // Fire will be called when some logging function is
