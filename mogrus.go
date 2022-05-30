@@ -6,6 +6,7 @@ package mogrus
 
 import (
 	"context"
+	"fmt"
 	"github.com/ainsleyclark/errors"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,53 +21,7 @@ type (
 	hooker struct {
 		Options
 	}
-	// Options defines the configuration used for creating a
-	// new Mogrus hook.
-	Options struct {
-		// Collection is the Mongo collection to write to when
-		// a log is fired.
-		Collection *mongo.Collection
-		// If there is no expiration set for a specific log level,
-		// the default expiry will be used.
-		Expiry time.Duration
-		// FireHook is a hook function called just before an
-		// entry is logged to Mongo.
-		FireHook FireHook
-		// ExpirationLevels allows for the customisation of expiry
-		// time for each logrus level.
-		// There may be instances where you want to keep Panics in
-		// the Mongo collection for longer than trace levels.
-		// For example:
-		/*
-			var levels = ExpirationLevels{
-				// Expire trace levels after 10 hours.
-				logrus.TraceLevel: LevelIndex{
-					Expire:   true,
-					Duration: time.Hour * 10,
-				},
-				// Expire info levels after 24 hours.
-				logrus.InfoLevel: LevelIndex{
-					Expire:   true,
-					Duration: time.Hour * 24,
-				},
-				// Do not expire panic entries, keep them forever.
-				logrus.PanicLevel: LevelIndex{
-					Expire: false,
-				},
-			}
-		*/
-		ExpirationLevels ExpirationLevels
-	}
-	// Entry defines a singular entry sent to Mongo
-	// when a Logrus event is fired.
-	Entry struct {
-		Level   string         `json:"level" bson:"level"`
-		Time    time.Time      `json:"time" bson:"time"`
-		Message string         `json:"string" bson:"string"`
-		Data    map[string]any `json:"data" bson:"data"`
-		Error   *errors.Error  `json:"error" bson:"error"`
-		Expiry  time.Time      `json:"expiry" bson:"expiry"`
-	}
+
 	// ExpirationLevels defines the map of log levels mapped to
 	// a duration a LevelIndex.
 	ExpirationLevels map[logrus.Level]LevelIndex
@@ -87,17 +42,6 @@ const (
 	DefaultExpiry = time.Hour * 24 * 7
 )
 
-// Validate validates the options before creating a new Hook.
-func (o Options) Validate() error {
-	if o.Collection == nil {
-		return errors.New("mongo collection nil")
-	}
-	if o.Expiry == 0 {
-		o.Expiry = DefaultExpiry
-	}
-	return nil
-}
-
 // New creates a new Mogrus hooker.
 // Returns errors.INVALID if the collection is nil.
 // Returns errors.INTERNAL if the indexes could not be added.
@@ -109,7 +53,7 @@ func New(ctx context.Context, opts Options) (*hooker, error) {
 		return nil, errors.NewInvalid(err, "Error validating Options", op)
 	}
 
-	err = addIndexes(ctx, opts.Collection)
+	err = addIndexes(ctx, opts)
 	if err != nil {
 		return nil, errors.NewInternal(err, "Error creating indexes", op)
 	}
@@ -131,7 +75,7 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 		Message: entry.Message,
 		Data:    make(map[string]any),
 		Error:   nil,
-		Expiry:  time.Time{},
+		Expiry:  make(map[string]time.Time),
 	}
 
 	for k, v := range entry.Data {
@@ -172,20 +116,32 @@ func (hook *hooker) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
 
-func addIndexes(ctx context.Context, collection *mongo.Collection) error {
+// index - TODO
+func (l LevelIndex) index() mongo.IndexModel {
+	key := fmt.Sprintf("expiry.ttl-%d", l.Duration)
+	return mongo.IndexModel{
+		Keys:    bson.M{key: l.Duration},
+		Options: options.Index().SetExpireAfterSeconds(int32(l.Duration)).SetSparse(true),
+	}
+}
 
-	indexes := []mongo.IndexModel{
-		{
-			Keys:    bson.M{"expiry.ttl60s": 1},
-			Options: options.Index().SetExpireAfterSeconds(60).SetSparse(true),
-		},
-		{
-			Keys:    bson.M{"expiry.ttl5s": 1},
-			Options: options.Index().SetExpireAfterSeconds(5).SetSparse(true),
-		},
+// addIndexes is responsible for injecting the indexes to
+// the Mongo collection.
+func addIndexes(ctx context.Context, opts Options) error {
+	// Bail if there are no expiration levels set.
+	if len(opts.ExpirationLevels) == 0 {
+		return nil
 	}
 
-	_, err := collection.Indexes().CreateMany(ctx, indexes)
+	// Range over the expiration levels set and append
+	// to a mongo.IndexModel slice.
+	indexes := make([]mongo.IndexModel, len(opts.ExpirationLevels))
+	for i, v := range opts.ExpirationLevels {
+		indexes[i] = v.index()
+	}
+
+	// Create the indexes within the Mongo collection.
+	_, err := opts.Collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		return err
 	}
