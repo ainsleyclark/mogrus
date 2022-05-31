@@ -25,7 +25,7 @@ go get -u github.com/ainsleyclark/mogrus
 ## How to use
 
 ```go
-func TestExample(t *testing.T) {
+func ExampleMogrus() {
 	l := logrus.New()
 
 	clientOptions := options.Client().
