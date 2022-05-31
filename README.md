@@ -10,11 +10,7 @@
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat)](https://pkg.go.dev/github.com/ainsleyclark/mogrus)
 
 # Mogrus
-A Go wrapper for Logrus, Errors and Mongo giving you extremely detailed log reports.
-
-## Contributing
-
-Please feel free to make a pull request if you think something should be added to this package!
+A Go wrapper for Logrus, Errors and Mongo giving you extremely detailed log reports. This package is designed to be used with [github.com/ainsleyclark/errors]
 
 ## Installation
 
@@ -23,6 +19,8 @@ go get -u github.com/ainsleyclark/mogrus
 ```
 
 ## How to use
+
+### Add hook
 
 ```go
 func ExampleMogrus() {
@@ -68,6 +66,41 @@ func ExampleMogrus() {
 	l.WithError(errors.NewInternal(errors.New("error"), "message", "op")).Error("Error level")
 }
 ```
+
+### Entry
+
+```go
+// Entry defines a singular entry sent to Mongo
+// when a Logrus event is fired.
+Entry struct {
+	Level   string               `json:"level" bson:"level"`
+	Time    time.Time            `json:"time" bson:"time"`
+	Message string               `json:"message" bson:"message"`
+	Data    map[string]any       `json:"data" bson:"data"`
+	Error   *Error               `json:"error" bson:"error"`
+	Expiry  map[string]time.Time `json:"expiry" bson:"expiry"`
+}
+```
+
+### Error
+
+```go
+// Error defines a custom Error for log entries, detailing
+// the file line, errors are returned as strings instead
+// of the stdlib error.
+Error struct {
+	Code      string `json:"code" bson:"code"`
+	Message   string `json:"message" bson:"message"`
+	Operation string `json:"operation" bson:"op"`
+	Err       string `json:"error" bson:"err"`
+	FileLine  string `json:"file_line" bson:"file_line"`
+}
+```
+
+
+## Contributing
+
+Please feel free to make a pull request if you think something should be added to this package!
 
 ## Credits
 
