@@ -39,8 +39,8 @@ func ExampleMogrus() {
 
 	opts := mogrus.Options{
 		Collection: client.Database("logs").Collection("col"),
-		// FireHook is a hook function called just before an
-		// entry is logged to Mongo.
+		// FireHook is a function called just before an entry
+		// is sent to Mongo.
 		FireHook: func(e mogrus.Entry) {
 			fmt.Printf("%+v\n", e)
 		},
