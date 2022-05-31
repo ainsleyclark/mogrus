@@ -56,14 +56,14 @@ func ExampleMogrus() {
 		// FireHook is a hook function called just before an
 		// entry is logged to Mongo.
 		FireHook: func(e mogrus.Entry) {
-		fmt.Printf("%+v\n", e)
+			fmt.Printf("%+v\n", e)
 		},
 		// ExpirationLevels allows for the customisation of expiry
 		// time for each Logrus level by default entries do not expire.
 		ExpirationLevels: mogrus.ExpirationLevels{
-		logrus.DebugLevel: time.Second * 5,
-		logrus.InfoLevel:  time.Second * 15,
-		logrus.ErrorLevel: time.Second * 30,
+			logrus.DebugLevel: time.Second * 5,
+			logrus.InfoLevel:  time.Second * 15,
+			logrus.ErrorLevel: time.Second * 30,
 		},
 	}
 
@@ -121,9 +121,9 @@ Error struct {
 
 - Add global expiration time for all log levels.
 - Add constructors for:
-  - WithDB()
-  - WithAuth()
-  - New()
+  - `WithDB()`
+  - `WithAuth()`
+  - `New()`
 
 ## Contributing
 
