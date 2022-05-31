@@ -12,6 +12,19 @@
 # Mogrus
 A Go wrapper for Logrus, Errors and Mongo giving you extremely detailed log reports. This package is designed to be used with [github.com/ainsleyclark/errors]
 
+## Overview
+
+- ✅ A humble selection of errors codes that touches most bases.
+- ✅ User friendly error messages for returning via an API for example.
+- ✅ Operation support `(Struct.Method)` naming convention.
+- ✅ Retrieve call stacks as preformatted or as a string slice.
+- ✅ Generate HTTP response codes from all error types.
+- ✅ Extremely lightweight with no external dependencies.
+
+
+## Why?
+
+
 ## Installation
 
 ```bash
