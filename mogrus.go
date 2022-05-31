@@ -23,22 +23,15 @@ type (
 	}
 	// ExpirationLevels defines the map of log levels mapped to
 	// a duration a LevelIndex.
-	ExpirationLevels map[logrus.Level]LevelIndex
-	// LevelIndex defines the options for expiring certain logrus
-	// Levels via Mongo.
-	LevelIndex struct {
-		Expire   bool
-		Duration time.Duration
-	}
+	ExpirationLevels map[logrus.Level]time.Duration
 	// FireHook defines the function used for firing entry
 	// to a call back function.
 	FireHook func(e Entry)
 )
 
 const (
-	// DefaultExpiry is the expiry of items in Mongo when none
-	// is set. The default expiration is one week.
-	DefaultExpiry = time.Hour * 24 * 7
+	// DefaultExpiryKey - TODO
+	DefaultExpiryKey = "ttl-%s"
 )
 
 // New creates a new Mogrus hooker.
@@ -72,30 +65,33 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 		Level:   entry.Level.String(),
 		Time:    entry.Time,
 		Message: entry.Message,
-		Data:    make(map[string]any),
-		Error:   nil,
 		Expiry:  make(map[string]time.Time),
 	}
 
 	for k, v := range entry.Data {
 		if logrus.ErrorKey == k && v != nil {
-			formatted.Error = errors.ToError(v)
+			e := errors.ToError(v)
+			formatted.Error = &Error{
+				Code:      e.Code,
+				Message:   e.Message,
+				Operation: e.Operation,
+				Err:       e.Err.Error(),
+				FileLine:  e.FileLine(),
+			}
 			continue
 		}
-		entry.Data[k] = v
+		if formatted.Data == nil {
+			formatted.Data = make(map[string]any)
+		}
+		formatted.Data[k] = v
 	}
 
-	//data["expiry"] = map[string]time.Time{}
-	//
-	//if data["level"] == "panic" {
-	//	data["expiry"] = map[string]time.Time{
-	//		"ttl60s": time.Now(),
-	//	}
-	//} else {
-	//	data["expiry"] = map[string]time.Time{
-	//		"ttl5s": time.Now(),
-	//	}
-	//}
+	for level, _ := range hook.ExpirationLevels {
+		if level == entry.Level {
+			key := fmt.Sprintf(DefaultExpiryKey, level.String())
+			formatted.Expiry[key] = time.Now()
+		}
+	}
 
 	if hook.FireHook != nil {
 		hook.FireHook(formatted)
@@ -116,12 +112,16 @@ func (hook *hooker) Levels() []logrus.Level {
 }
 
 // index - TODO
-func (l LevelIndex) index() mongo.IndexModel {
-	key := fmt.Sprintf("expiry.ttl-%d", l.Duration)
-	return mongo.IndexModel{
-		Keys:    bson.M{key: l.Duration},
-		Options: options.Index().SetExpireAfterSeconds(int32(l.Duration)).SetSparse(true),
+func (e ExpirationLevels) indexes() []mongo.IndexModel {
+	var indexes []mongo.IndexModel
+	for level, duration := range e {
+		key := fmt.Sprintf(DefaultExpiryKey, level.String())
+		indexes = append(indexes, mongo.IndexModel{
+			Keys:    bson.M{"expiry." + key: 1},
+			Options: options.Index().SetExpireAfterSeconds(int32(duration.Seconds())).SetSparse(true),
+		})
 	}
+	return indexes
 }
 
 // addIndexes is responsible for injecting the indexes to
@@ -132,15 +132,8 @@ func addIndexes(ctx context.Context, opts Options) error {
 		return nil
 	}
 
-	// Range over the expiration levels set and append
-	// to a mongo.IndexModel slice.
-	indexes := make([]mongo.IndexModel, len(opts.ExpirationLevels))
-	for i, v := range opts.ExpirationLevels {
-		indexes[i] = v.index()
-	}
-
 	// Create the indexes within the Mongo collection.
-	_, err := opts.Collection.Indexes().CreateMany(ctx, indexes)
+	_, err := opts.Collection.Indexes().CreateMany(ctx, opts.ExpirationLevels.indexes())
 	if err != nil {
 		return err
 	}
