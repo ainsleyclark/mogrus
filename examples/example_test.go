@@ -20,47 +20,43 @@ import (
 
 func TestExample(t *testing.T) {
 	l := logrus.New()
-	l.SetLevel(logrus.TraceLevel)
-
-	collection := connectMongo()
-
-	hook, err := mogrus.New(context.Background(), mogrus.Options{
-		Collection: collection,
-		FireHook: func(e mogrus.Entry) {
-			fmt.Printf("%+v\n", e)
-		},
-		ExpirationLevels: mogrus.ExpirationLevels{
-			logrus.DebugLevel: time.Second * 5,
-			logrus.InfoLevel:  time.Second * 15,
-			logrus.ErrorLevel: time.Second * 30,
-		},
-	})
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	l.AddHook(hook)
-
-	l.Debug("Debug level")
-	l.WithField("key", "value").Info("Info level")
-	l.WithError(errors.NewInternal(errors.New("error"), "message", "op")).Error("Error level")
-}
-
-func connectMongo() *mongo.Collection {
-	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
-
-	uri := os.Getenv("MONGO_CONNECTION")
-	fmt.Println(uri)
 
 	clientOptions := options.Client().
-		ApplyURI(uri).
-		SetServerAPIOptions(serverAPIOptions)
+		ApplyURI(os.Getenv("MONGO_CONNECTION")).
+		SetServerAPIOptions(options.ServerAPI(options.ServerAPIVersion1))
 
 	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	return client.Database("logs").Collection("info")
+	opts := mogrus.Options{
+		Collection: client.Database("logs").Collection("col"),
+		// FireHook is a hook function called just before an
+		// entry is logged to Mongo.
+		FireHook: func(e mogrus.Entry) {
+			fmt.Printf("%+v\n", e)
+		},
+		// ExpirationLevels allows for the customisation of expiry
+		// time for each Logrus level by default entries do not expire.
+		ExpirationLevels: mogrus.ExpirationLevels{
+			logrus.DebugLevel: time.Second * 5,
+			logrus.InfoLevel:  time.Second * 15,
+			logrus.ErrorLevel: time.Second * 30,
+		},
+	}
+
+	// Create the new Mogrus hook, returns an error if the
+	// collection is nil.
+	hook, err := mogrus.New(context.Background(), opts)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Add the hook to the Logrus instance.
+	l.AddHook(hook)
+
+	l.Debug("Debug level")
+	l.WithField("key", "value").Info("Info level")
+	l.WithError(errors.NewInternal(errors.New("error"), "message", "op")).Error("Error level")
 }

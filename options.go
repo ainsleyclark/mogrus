@@ -19,26 +19,18 @@ type Options struct {
 	// entry is logged to Mongo.
 	FireHook FireHook
 	// ExpirationLevels allows for the customisation of expiry
-	// time for each logrus level.
+	// time for each Logrus level by default entries do not expire.
 	// There may be instances where you want to keep Panics in
 	// the Mongo collection for longer than trace levels.
 	// For example:
 	/*
 		var levels = ExpirationLevels{
 			// Expire trace levels after 10 hours.
-			logrus.TraceLevel: LevelIndex{
-				Expire:   true,
-				Duration: time.Hour * 10,
-			},
+			logrus.TraceLevel: time.Hour * 10
 			// Expire info levels after 24 hours.
-			logrus.InfoLevel: LevelIndex{
-				Expire:   true,
-				Duration: time.Hour * 24,
-			},
-			// Do not expire panic entries, keep them forever.
-			logrus.PanicLevel: LevelIndex{
-				Expire: false,
-			},
+			logrus.InfoLevel:t ime.Hour * 24,
+			// Expire panic levels after 1 week.
+			logrus.InfoLevel:t ime.Hour * 24 * 6,
 		}
 	*/
 	ExpirationLevels ExpirationLevels
