@@ -30,7 +30,8 @@ type (
 )
 
 const (
-	// DefaultExpiryKey - TODO
+	// DefaultExpiryKey is the key and index stored within
+	// Mongo for log levels that have a duration.
 	DefaultExpiryKey = "ttl-%s"
 )
 
@@ -61,6 +62,7 @@ func New(ctx context.Context, opts Options) (*hooker, error) {
 func (hook *hooker) Fire(entry *logrus.Entry) error {
 	const op = "Mogrus.Fire"
 
+	// Construct a formatted Mongo Entry.
 	formatted := Entry{
 		Level:   entry.Level.String(),
 		Time:    entry.Time,
@@ -68,6 +70,8 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 		Expiry:  make(map[string]time.Time),
 	}
 
+	// Range over the entries data and assign an error if
+	// it exists, otherwise construct a map with the field data.
 	for k, v := range entry.Data {
 		if logrus.ErrorKey == k && v != nil {
 			e := errors.ToError(v)
@@ -86,6 +90,7 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 		formatted.Data[k] = v
 	}
 
+	// Add expiry to levels.
 	for level, _ := range hook.ExpirationLevels {
 		if level == entry.Level {
 			key := fmt.Sprintf(DefaultExpiryKey, level.String())
@@ -93,10 +98,12 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 		}
 	}
 
+	// Fire callback.
 	if hook.FireHook != nil {
 		hook.FireHook(formatted)
 	}
 
+	// Insert into Mongo.
 	_, err := hook.Collection.InsertOne(context.Background(), formatted)
 	if err != nil {
 		return errors.NewInternal(err, "Error writing entry to Mongo Collection", op)
@@ -111,7 +118,8 @@ func (hook *hooker) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
 
-// index - TODO
+// indexes returns a collection of mongo.IndexModels with the
+// appropriate expiry durations assigned.
 func (e ExpirationLevels) indexes() []mongo.IndexModel {
 	var indexes []mongo.IndexModel
 	for level, duration := range e {
