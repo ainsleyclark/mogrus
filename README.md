@@ -10,8 +10,9 @@
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat)](https://pkg.go.dev/github.com/ainsleyclark/mogrus)
 
 # Mogrus
-A Go wrapper for Logrus, Errors and Mongo giving you extremely detailed log reports. This package is designed to be used with [github.com/ainsleyclark/errors]
-(https://github.com/ainsleyclark/errors)
+
+A Go wrapper for Logrus, Errors and Mongo giving you extremely detailed log reports. This package is designed to be used
+with [github.com/ainsleyclark/errors](https://github.com/ainsleyclark/errors)
 
 ## Overview
 
@@ -22,9 +23,7 @@ A Go wrapper for Logrus, Errors and Mongo giving you extremely detailed log repo
 - ✅ Generate HTTP response codes from all error types.
 - ✅ Extremely lightweight with no external dependencies.
 
-
 ## Why?
-
 
 ## Installation
 
@@ -38,46 +37,46 @@ go get -u github.com/ainsleyclark/mogrus
 
 ```go
 func ExampleMogrus() {
-	l := logrus.New()
+l := logrus.New()
 
-	clientOptions := options.Client().
-		ApplyURI(os.Getenv("MONGO_CONNECTION")).
-		SetServerAPIOptions(options.ServerAPI(options.ServerAPIVersion1))
+clientOptions := options.Client().
+ApplyURI(os.Getenv("MONGO_CONNECTION")).
+SetServerAPIOptions(options.ServerAPI(options.ServerAPIVersion1))
 
-	client, err := mongo.Connect(context.Background(), clientOptions)
-	if err != nil {
-		log.Fatalln(err)
-	}
+client, err := mongo.Connect(context.Background(), clientOptions)
+if err != nil {
+log.Fatalln(err)
+}
 
-	opts := mogrus.Options{
-		Collection: client.Database("logs").Collection("col"),
-		// FireHook is a function called just before an entry
-		// is sent to Mongo.
-		FireHook: func(e mogrus.Entry) {
-			fmt.Printf("%+v\n", e)
-		},
-		// ExpirationLevels allows for the customisation of expiry
-		// time for each Logrus level by default entries do not expire.
-		ExpirationLevels: mogrus.ExpirationLevels{
-			logrus.DebugLevel: time.Second * 5,
-			logrus.InfoLevel:  time.Second * 15,
-			logrus.ErrorLevel: time.Second * 30,
-		},
-	}
+opts := mogrus.Options{
+Collection: client.Database("logs").Collection("col"),
+// FireHook is a function called just before an entry
+// is sent to Mongo.
+FireHook: func (e mogrus.Entry) {
+fmt.Printf("%+v\n", e)
+},
+// ExpirationLevels allows for the customisation of expiry
+// time for each Logrus level by default entries do not expire.
+ExpirationLevels: mogrus.ExpirationLevels{
+logrus.DebugLevel: time.Second * 5,
+logrus.InfoLevel:  time.Second * 15,
+logrus.ErrorLevel: time.Second * 30,
+},
+}
 
-	// Create the new Mogrus hook, returns an error if the
-	// collection is nil.
-	hook, err := mogrus.New(context.Background(), opts)
-	if err != nil {
-		log.Fatalln(err)
-	}
+// Create the new Mogrus hook, returns an error if the
+// collection is nil.
+hook, err := mogrus.New(context.Background(), opts)
+if err != nil {
+log.Fatalln(err)
+}
 
-	// Add the hook to the Logrus instance.
-	l.AddHook(hook)
+// Add the hook to the Logrus instance.
+l.AddHook(hook)
 
-	l.Debug("Debug level")
-	l.WithField("key", "value").Info("Info level")
-	l.WithError(errors.NewInternal(errors.New("error"), "message", "op")).Error("Error level")
+l.Debug("Debug level")
+l.WithField("key", "value").Info("Info level")
+l.WithError(errors.NewInternal(errors.New("error"), "message", "op")).Error("Error level")
 }
 ```
 
@@ -89,12 +88,12 @@ The definition of an entry below is the object that is fired to Mongo.
 // Entry defines a singular entry sent to Mongo
 // when a Logrus event is fired.
 Entry struct {
-	Level   string               `json:"level" bson:"level"`
-	Time    time.Time            `json:"time" bson:"time"`
-	Message string               `json:"message" bson:"message"`
-	Data    map[string]any       `json:"data" bson:"data"`
-	Error   *Error               `json:"error" bson:"error"`
-	Expiry  map[string]time.Time `json:"expiry" bson:"expiry"`
+Level   string               `json:"level" bson:"level"`
+Time    time.Time            `json:"time" bson:"time"`
+Message string               `json:"message" bson:"message"`
+Data    map[string]any       `json:"data" bson:"data"`
+Error   *Error               `json:"error" bson:"error"`
+Expiry  map[string]time.Time `json:"expiry" bson:"expiry"`
 }
 ```
 
@@ -107,14 +106,13 @@ The definition of an error below is the object that is stored in an Entry when `
 // the file line, errors are returned as strings instead
 // of the stdlib error.
 Error struct {
-	Code      string `json:"code" bson:"code"`
-	Message   string `json:"message" bson:"message"`
-	Operation string `json:"operation" bson:"op"`
-	Err       string `json:"error" bson:"err"`
-	FileLine  string `json:"file_line" bson:"file_line"`
+Code      string `json:"code" bson:"code"`
+Message   string `json:"message" bson:"message"`
+Operation string `json:"operation" bson:"op"`
+Err       string `json:"error" bson:"err"`
+FileLine  string `json:"file_line" bson:"file_line"`
 }
 ```
-
 
 ## Contributing
 
