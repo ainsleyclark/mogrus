@@ -117,6 +117,14 @@ Error struct {
 }
 ```
 
+## TODO
+
+- Add global expiration time for all log levels.
+- Add constructors for:
+  - WithDB()
+  - WithAuth()
+  - New()
+
 ## Contributing
 
 Please feel free to make a pull request if you think something should be added to this package!
