@@ -38,7 +38,7 @@ const (
 // New creates a new Mogrus hooker.
 // Returns errors.INVALID if the collection is nil.
 // Returns errors.INTERNAL if the indexes could not be added.
-func New(ctx context.Context, opts Options) (*hooker, error) {
+func New(ctx context.Context, opts Options) (logrus.Hook, error) {
 	const op = "Mogrus.New"
 
 	err := opts.Validate()
@@ -91,7 +91,7 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 	}
 
 	// Add expiry to levels.
-	for level, _ := range hook.ExpirationLevels {
+	for level := range hook.ExpirationLevels {
 		if level == entry.Level {
 			key := fmt.Sprintf(DefaultExpiryKey, level.String())
 			formatted.Expiry[key] = time.Now()

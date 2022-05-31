@@ -5,7 +5,6 @@
 package mogrus
 
 import (
-	"github.com/ainsleyclark/errors"
 	"reflect"
 	"testing"
 )
@@ -20,7 +19,7 @@ func TestEntry_HasError(t *testing.T) {
 			false,
 		},
 		"True": {
-			Entry{Error: errors.NewE(errors.New("error"), "message", "op")},
+			Entry{Error: &Error{Err: "error"}},
 			true,
 		},
 	}
