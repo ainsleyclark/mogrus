@@ -69,6 +69,8 @@ func ExampleMogrus() {
 
 ### Entry
 
+The definition of an entry below is the object that is fired to Mongo.
+
 ```go
 // Entry defines a singular entry sent to Mongo
 // when a Logrus event is fired.
@@ -83,6 +85,8 @@ Entry struct {
 ```
 
 ### Error
+
+The definition of an error below is the object that is stored in an Entry when `log.WithError` is used.
 
 ```go
 // Error defines a custom Error for log entries, detailing
