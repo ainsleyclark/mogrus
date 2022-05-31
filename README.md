@@ -11,6 +11,7 @@
 
 # Mogrus
 A Go wrapper for Logrus, Errors and Mongo giving you extremely detailed log reports. This package is designed to be used with [github.com/ainsleyclark/errors]
+(https://github.com/ainsleyclark/errors)
 
 ## Overview
 
