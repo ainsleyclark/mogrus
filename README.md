@@ -9,7 +9,7 @@
 [![codecov](https://codecov.io/gh/ainsleyclark/mogrus/branch/master/graph/badge.svg?token=K27L8LS7DA)](https://codecov.io/gh/ainsleyclark/mogrus)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat)](https://pkg.go.dev/github.com/ainsleyclark/mogrus)
 
-# Mogrus
+# ✏️ Mogrus
 
 A Go wrapper for Logrus, Errors and Mongo giving you extremely detailed log reports. This package is designed to be used
 with [github.com/ainsleyclark/errors](https://github.com/ainsleyclark/errors) for error reporting with codes, messages and more.
