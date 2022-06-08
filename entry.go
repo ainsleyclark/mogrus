@@ -6,6 +6,7 @@ package mogrus
 
 import (
 	"github.com/ainsleyclark/errors"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
@@ -13,6 +14,7 @@ type (
 	// Entry defines a singular entry sent to Mongo
 	// when a Logrus event is fired.
 	Entry struct {
+		ID      primitive.ObjectID   `json:"id,omitempty" bson:"_id,omitempty"`
 		Level   string               `json:"level" bson:"level"`
 		Time    time.Time            `json:"time" bson:"time"`
 		Message string               `json:"message" bson:"message"`

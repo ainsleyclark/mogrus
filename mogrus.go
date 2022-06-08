@@ -73,8 +73,11 @@ func (hook *hooker) Fire(entry *logrus.Entry) error {
 	// Range over the entries data and assign an error if
 	// it exists, otherwise construct a map with the field data.
 	for k, v := range entry.Data {
-		if logrus.ErrorKey == k && v != nil {
+		if logrus.ErrorKey == k {
 			e := errors.ToError(v)
+			if e == nil {
+				continue
+			}
 			formatted.Error = &Error{
 				Code:      e.Code,
 				Message:   e.Message,

@@ -117,6 +117,22 @@ func TestHooker_Fire(t *testing.T) {
 			},
 			nil,
 		},
+		"Nil Error": {
+			logrus.Entry{
+				Level:   logrus.PanicLevel,
+				Time:    now,
+				Message: "message",
+				Data: map[string]any{
+					logrus.ErrorKey: nil,
+				},
+			},
+			func(t *mtest.T) Options {
+				t.AddMockResponses(mtest.CreateSuccessResponse(
+					bson.D{{"key", "value"}}...)) //nolint
+				return Options{Collection: t.Coll}
+			},
+			nil,
+		},
 		"With Data": {
 			logrus.Entry{
 				Level:   logrus.PanicLevel,
