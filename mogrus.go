@@ -62,36 +62,7 @@ func New(ctx context.Context, opts Options) (logrus.Hook, error) {
 func (hook *hooker) Fire(entry *logrus.Entry) error {
 	const op = "Mogrus.Fire"
 
-	// Construct a formatted Mongo Entry.
-	formatted := Entry{
-		Level:   entry.Level.String(),
-		Time:    entry.Time,
-		Message: entry.Message,
-		Expiry:  make(map[string]time.Time),
-	}
-
-	// Range over the entries data and assign an error if
-	// it exists, otherwise construct a map with the field data.
-	for k, v := range entry.Data {
-		if logrus.ErrorKey == k {
-			e := errors.ToError(v)
-			if e == nil {
-				continue
-			}
-			formatted.Error = &Error{
-				Code:      e.Code,
-				Message:   e.Message,
-				Operation: e.Operation,
-				Err:       e.Err.Error(),
-				FileLine:  e.FileLine(),
-			}
-			continue
-		}
-		if formatted.Data == nil {
-			formatted.Data = make(map[string]any)
-		}
-		formatted.Data[k] = v
-	}
+	formatted := ToEntry(entry)
 
 	// Add expiry to levels.
 	for level := range hook.ExpirationLevels {
@@ -150,4 +121,40 @@ func addIndexes(ctx context.Context, opts Options) error {
 	}
 
 	return nil
+}
+
+// ToEntry transforms a logrus.Entry to a mogrus.Entry
+func ToEntry(entry *logrus.Entry) Entry {
+	// Construct a formatted Mongo Entry.
+	formatted := Entry{
+		Level:   entry.Level.String(),
+		Time:    entry.Time,
+		Message: entry.Message,
+		Expiry:  make(map[string]time.Time),
+	}
+
+	// Range over the entries data and assign an error if
+	// it exists, otherwise construct a map with the field data.
+	for k, v := range entry.Data {
+		if logrus.ErrorKey == k {
+			e := errors.ToError(v)
+			if e == nil {
+				continue
+			}
+			formatted.Error = &Error{
+				Code:      e.Code,
+				Message:   e.Message,
+				Operation: e.Operation,
+				Err:       e.Err.Error(),
+				FileLine:  e.FileLine(),
+			}
+			continue
+		}
+		if formatted.Data == nil {
+			formatted.Data = make(map[string]any)
+		}
+		formatted.Data[k] = v
+	}
+
+	return formatted
 }
