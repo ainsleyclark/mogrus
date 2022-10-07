@@ -148,6 +148,9 @@ func ToEntry(entry *logrus.Entry) Entry {
 				Err:       e.Err.Error(),
 				FileLine:  e.FileLine(),
 			}
+			if formatted.Message == "" {
+				formatted.Message = e.Message
+			}
 			continue
 		}
 		if formatted.Data == nil {

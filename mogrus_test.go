@@ -133,6 +133,21 @@ func TestHooker_Fire(t *testing.T) {
 			},
 			nil,
 		},
+		"No Message": {
+			logrus.Entry{
+				Level: logrus.PanicLevel,
+				Time:  now,
+				Data: map[string]any{
+					logrus.ErrorKey: errors.NewInternal(errors.New("error"), "message", "op"),
+				},
+			},
+			func(t *mtest.T) Options {
+				t.AddMockResponses(mtest.CreateSuccessResponse(
+					bson.D{{"key", "value"}}...)) //nolint
+				return Options{Collection: t.Coll}
+			},
+			nil,
+		},
 		"With Data": {
 			logrus.Entry{
 				Level:   logrus.PanicLevel,
